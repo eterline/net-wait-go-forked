@@ -25,7 +25,7 @@ func New(opts ...Option) *Executor {
 		defaultProto     = "tcp"
 		defaultWait      = 200 * time.Millisecond
 		defaultBreak     = 50 * time.Millisecond
-		defaultDeadline  = 15 * time.Second
+		defaultDeadline  = 10 * time.Second
 		defaultDebug     = false
 		defaultUDPPacket = ""
 	)
@@ -89,8 +89,14 @@ func WithUDPPacket(packet []byte) Option {
 }
 
 func (e *Executor) Do(addrs []string) bool {
-	deadlineCh := time.After(e.Deadline)
+
 	successCh := make(chan struct{})
+	deadlineCh, close := context.WithTimeout(e.Context, e.Deadline)
+	defer close()
+
+	if e.Debug {
+		log.Printf("deadline time: %d ms", e.Deadline.Milliseconds())
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(addrs))
@@ -102,7 +108,7 @@ func (e *Executor) Do(addrs []string) bool {
 
 				for {
 					select {
-					case <-deadlineCh:
+					case <-deadlineCh.Done():
 						return
 					case <-e.Context.Done():
 						return
@@ -126,13 +132,12 @@ func (e *Executor) Do(addrs []string) bool {
 		}
 
 		wg.Wait()
-		close(successCh)
 	}()
 
 	select {
 	case <-e.Context.Done():
 		return false
-	case <-deadlineCh:
+	case <-deadlineCh.Done():
 		return false
 	case <-successCh:
 		return true
