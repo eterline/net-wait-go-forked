@@ -1,4 +1,4 @@
-module github.com/antelman107/net-wait-go
+module github.com/eterline/net-wait-go-forked
 
 go 1.14
 
