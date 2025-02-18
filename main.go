@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/antelman107/net-wait-go/wait"
+	"github.com/eterline/net-wait-go-forked/wait"
 )
 
 func main() {
