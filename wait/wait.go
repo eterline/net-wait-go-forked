@@ -151,7 +151,6 @@ func (e *Executor) doTCP(addr string) bool {
 
 		return false
 	}
-
 	defer conn.Close()
 
 	return true
